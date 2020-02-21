@@ -3,7 +3,7 @@ const express = require("express");
 const server = express();
 
 // configurar o servidor para apresentar arquivos estáticos
-server.use(express.static('public'));
+server.use(express.static('assets'));
 
 // habilitar body do formulário
 server.use(express.urlencoded({
@@ -11,12 +11,12 @@ server.use(express.urlencoded({
 }));
 
 // configurando a conexão com o banco de dados
-const Pool = require('pg').Pool;
-const db = new Pool({
-    user: 'postgres',
-    password: 'toor',
+const mysql = require('mysql');
+const db = new mysql.createPool({
     host: 'localhost',
-    port: '5432',
+    port: '3306',
+    user: 'root',
+    password: '',
     database: 'bloodbank',
 });
 
@@ -36,7 +36,7 @@ server.get("/", function (req, res) {
         if (err)
             return res.send("Erro de banco de dados!");
 
-        const donors = result.rows;
+        const donors = result;
 
         return res.render("index.html", {
             donors
@@ -56,13 +56,13 @@ server.post("/", function (req, res) {
         return res.send("Todos os campos são obrigatórios!")
     }
     // coloco os valores dentro do banco de dados.
-    const query = `INSERT INTO donors ("name", "email", "blood") VALUES ($1, $2, $3)`;
+    const query = `INSERT INTO donors (name, email, blood) VALUES (?, ?, ?)`;
 
     const values = [name, email, blood];
 
     db.query(query, values, function (err) {
         if (err)
-            return res.send("Erro no banco de dados!");
+            return res.send("Erro cadastro no banco de dados!");
 
         return res.redirect("/");
     });
